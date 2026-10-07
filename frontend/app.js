@@ -110,7 +110,10 @@ function authView(mode = 'login') {
   };
   $('#go').onclick = submit;
   // Enter key submits the form from any field
-  ['#fe', '#fn', '#fm', '#fp'].forEach((sel) => { const el = $(sel); if (el) el.onkeydown = (e) => e.key === 'Enter' && submit(); });
+  ['#fe', '#fn', '#fm', '#fp'].forEach((sel) => { 
+    const el = $(sel); 
+    if (el) el.onkeydown = (e) => { if (e.key === 'Enter') submit(); }; 
+  });
   $('#eye').onclick = () => {
     const i = $('#fp'), show = i.type === 'password';
     i.type = show ? 'text' : 'password';
