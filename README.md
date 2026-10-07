@@ -59,10 +59,16 @@ The app is deploy-ready: the frontend calls the API on the **same origin** (`/ap
 and `TRUST_PROXY=1` makes the rate limiter see real visitor IPs behind a proxy.
 
 1. **Push the repo to GitHub** (or any git host).
-2. **Create a Web Service** on [Render](https://render.com) (or Fly.io / DigitalOcean App Platform):
+2. **One-click**: in [Render](https://render.com) choose **New → Blueprint**, select the repo —
+   `render.yaml` configures the service (root `backend`, `npm install` / `npm start`,
+   health check, auto-generated `JWT_SECRET`, `TRUST_PROXY=1`) and **prompts for
+   `MONGODB_URI`** — the free MongoDB Atlas connection string that makes your data
+   permanent. Or do it manually:
+   - Root Directory: `backend`
    - Build command: `npm install`
-   - Start command: `npm start` (run from `backend/` — set Root Directory to `backend`)
-3. **Set environment variables**: `JWT_SECRET` (long random string — required!), `TRUST_PROXY=1`.
+   - Start command: `npm start`
+3. **Environment variables** (manual setup only — the blueprint already sets these):
+   `JWT_SECRET` (long random string) and `TRUST_PROXY=1`.
    `PORT` is provided by the platform; the server reads it automatically.
 4. Deploy — you get `https://your-app.onrender.com` with HTTPS automatically.
    Attach a custom domain in the dashboard when ready.

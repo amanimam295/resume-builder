@@ -1,0 +1,22 @@
+# Render Blueprint — deploy this app in one click.
+# In Render: New → Blueprint → select this repository → Apply.
+services:
+  - type: web
+    name: freshcv
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    freeInstanceType: free
+    envVars:
+      # auto-generated strong secret — no need to invent one
+      - key: JWT_SECRET
+        generateValue: true
+      # real client IPs behind the proxy so rate limiting works
+      - key: TRUST_PROXY
+        value: "1"
+      # MongoDB Atlas connection string — Render asks you for this at deploy time
+      # (sync: false keeps the secret out of git)
+      - key: MONGODB_URI
+        sync: false

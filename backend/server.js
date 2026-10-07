@@ -12,9 +12,19 @@ const SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 const DB_FILE = path.join(__dirname, 'data', 'db.json');
 fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
 
-// ---- tiny JSON-file database (no native deps, works everywhere) ----
+// ---- storage ----
+// Routes call load()/save() either way:
+//  * no MONGODB_URI  -> tiny JSON file (local dev, zero setup)
+//  * MONGODB_URI set -> MongoDB Atlas: state cached in memory (single-instance app),
+//    every save() replaces one state document — data lives outside the host and
+//    survives redeploys, sleeps and host changes.
+const MONGO_URI = process.env.MONGODB_URI;
 const empty = () => ({ users: [], resumes: [] });
-const load = () => {
+let mem = null;
+let col = null; // MongoDB collection holding the whole app state
+let writeQ = Promise.resolve(); // serialize writes so they can't reorder
+
+const readFile = () => {
   if (!fs.existsSync(DB_FILE)) return empty();
   try {
     const d = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
@@ -26,10 +36,32 @@ const load = () => {
     return empty();
   }
 };
+
+const load = () => mem || (mem = readFile());
+
 const save = (d) => {
+  mem = d;
+  if (col) {
+    writeQ = writeQ
+      .then(() => col.replaceOne({ _id: 'app' }, { _id: 'app', users: d.users, resumes: d.resumes }, { upsert: true }))
+      .catch((e) => console.error('MongoDB write failed:', e.message));
+    return;
+  }
   try { if (fs.existsSync(DB_FILE)) fs.copyFileSync(DB_FILE, DB_FILE + '.bak'); } catch {} // keep previous good copy
   fs.writeFileSync(DB_FILE, JSON.stringify(d, null, 2));
 };
+
+async function initStorage() {
+  if (!MONGO_URI) { mem = readFile(); console.log('Storage: local JSON file'); return; }
+  const { MongoClient } = require('mongodb');
+  const client = new MongoClient(MONGO_URI);
+  await client.connect();
+  col = client.db('freshcv').collection('state');
+  const doc = await col.findOne({ _id: 'app' });
+  mem = doc ? { users: doc.users || [], resumes: doc.resumes || [] } : empty();
+  if (!doc) await col.replaceOne({ _id: 'app' }, { _id: 'app', users: [], resumes: [] }, { upsert: true });
+  console.log('Storage: MongoDB Atlas (data survives redeploys)');
+}
 const uid = () => crypto.randomUUID();
 
 const app = express();
@@ -257,4 +289,10 @@ if (fs.existsSync(FE)) app.use(express.static(FE, { setHeaders: (res) => res.set
 process.on('SIGINT', () => process.exit(0));
 process.on('SIGTERM', () => process.exit(0));
 
-const server = app.listen(PORT, () => console.log(`API running on http://localhost:${server.address().port}`));
+initStorage()
+  .then(() => app.listen(PORT, () => console.log(`API running on http://localhost:${PORT}`)))
+  .catch((e) => {
+    // fail fast rather than silently serving an empty database
+    console.error('FATAL: could not connect to MongoDB:', e.message);
+    process.exit(1);
+  });
