@@ -38,7 +38,7 @@ function setupView() {
     } catch (e) { toast(e.message); if (/log in instead/i.test(e.message)) loginView(); }
   };
   $('#go').onclick = submit;
-  for (const s of ['#n', '#e', '#m', '#p']) $(s).onkeydown = (ev) => ev.key === 'Enter' && submit();
+  for (const s of ['#n', '#e', '#m', '#p']) $(s).onkeydown = (ev) => { if (ev.key === 'Enter') submit(); };
 }
 
 // ---------- admin login ----------
@@ -61,7 +61,7 @@ function loginView() {
     } catch (e) { toast(e.message); }
   };
   $('#go').onclick = submit;
-  for (const s of ['#e', '#p']) $(s).onkeydown = (ev) => ev.key === 'Enter' && submit();
+  for (const s of ['#e', '#p']) $(s).onkeydown = (ev) => { if (ev.key === 'Enter') submit(); };
 }
 
 // ---------- panel: registered users + their sign-up details ----------
@@ -147,7 +147,7 @@ function editModal(u) {
     } catch (e) { toast(e.message); }
   };
   el.querySelector('#ms').onclick = save;
-  for (const s of ['#mn', '#me', '#mm']) el.querySelector(s).onkeydown = (e) => e.key === 'Enter' && save();
+  for (const s of ['#mn', '#me', '#mm']) el.querySelector(s).onkeydown = (e) => { if (e.key === 'Enter') save(); };
   el.querySelector('#mn').focus();
 }
 
