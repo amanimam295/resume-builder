@@ -169,11 +169,11 @@ function renderPreview() {
   const prj = d.projects.filter((x) => x.name).map((x) => `<div style="margin-bottom:6px"><div class="hd"><b>${esc(x.name)}</b><span>${link(x.link)}</span></div>${x.tech ? `<div class="sub"><i>${esc(x.tech)}</i></div>` : ''}${ul(x.desc)}</div>`).join('');
   const exp = d.experience.filter((x) => x.role || x.company).map((x) => `<div style="margin-bottom:6px"><div class="hd"><b>${esc(x.role)}</b><span>${esc(range(x.start, x.end))}</span></div><div class="sub">${esc(x.company)}</div>${ul(x.desc)}</div>`).join('');
   const cert = d.certifications.filter((x) => x.name).map((x) => `<li>${esc(x.name)}${x.issuer ? ' — ' + esc(x.issuer) : ''}${x.year ? ' (' + esc(x.year) + ')' : ''}</li>`).join('');
-  const skills = lines(d.skills.replace(/,/g, '\n')).map((s) => `<span>${esc(s)}</span>`).join('');
+  const skills = lines((d.skills || '').replace(/,/g, '\n')).map((s) => `<span>${esc(s)}</span>`).join('');
   $('#preview').innerHTML = `<div class="paper ${R.template || 'modern'}" style="--c:${R.color || '#2563eb'}">
     <h1>${esc(p.name) || 'Your Name'}</h1>${p.title ? `<div class="sub" style="font-size:14px">${esc(p.title)}</div>` : ''}<div class="contact">${contact}</div>
     ${sec('Objective', d.summary ? `<div>${esc(d.summary)}</div>` : '')}${sec('Education', edu)}${sec('Skills', skills ? `<div class="chips">${skills}</div>` : '')}
-    ${sec('Projects', prj)}${sec('Experience', exp)}${sec('Certifications', cert ? `<ul>${cert}</ul>` : '')}${sec('Achievements', ul(d.achievements))}</div>`;
+    ${sec('Projects', prj)}${sec('Experience', exp)}${sec('Certifications', cert ? `<ul>${cert}</ul>` : '')}${sec('Achievements', ul(d.achievements || ''))}</div>`;
 }
 
 // ---------- autosave ----------
